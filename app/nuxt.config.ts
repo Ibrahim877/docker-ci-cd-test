@@ -41,10 +41,10 @@ export default defineNuxtConfig({
     },
     runtimeConfig: {
         public: {
-            backendUrl,
-            baseURL: backendUrl + '/api/',
-            apiUrl: backendUrl + '/api/',
-            siteUrl: frontUrl,
+            backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:7000',
+            baseURL: (process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:8000') + '/api/',
+            apiUrl: (process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:8000') + '/api/',
+            siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
         },
     },
 })

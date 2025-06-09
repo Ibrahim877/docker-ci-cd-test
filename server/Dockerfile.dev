@@ -1,0 +1,44 @@
+# 1. PHP 8.3 ilə Alpine image bazasında Laravel üçün uyğun image
+FROM php:8.3-fpm
+
+# 2. Sistem alətləri və PHP modullarını quraşdır
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    unzip \
+    zip \
+    libzip-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libmcrypt-dev \
+    libssl-dev \
+    && docker-php-ext-install pdo pdo_mysql zip gd
+
+# 3. Composer-i quraşdır
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# 4. İş qovluğunu təyin et
+WORKDIR /var/www/html
+
+# 5. Laravel fayllarını konteynerə köçür
+COPY . .
+
+# 6. Composer dependency-ləri quraşdır
+RUN composer install
+
+# 7. storage və public qovluqlarına chmod ver
+RUN chmod -R 777 storage \
+    && chmod -R 777 bootstrap/cache \
+    && chmod -R 777 public
+
+# 8. symbolic link yarat (public/storage -> storage/app/public)
+RUN php artisan storage:link || true
+
+# 9. Laravel dev server üçün port aç
+EXPOSE 8000
+
+# 10. Development üçün artisan serve istifadə olunur
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

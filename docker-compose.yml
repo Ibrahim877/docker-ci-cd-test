@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Laravel Backend
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    container_name: laravel_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server:/var/www/html
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: ${LARAVEL_DB_HOST}
+      DB_PORT: ${LARAVEL_DB_PORT}
+      DB_DATABASE: ${LARAVEL_DB_NAME}
+      DB_USERNAME: ${LARAVEL_DB_USER}
+      DB_PASSWORD: ${LARAVEL_DB_PASSWORD}
+    working_dir: /var/www/html
+    command: >
+      sh -c "until php artisan migrate; do sleep 3; done &&
+             php artisan serve --host=0.0.0.0 --port=8000"
+
+  # Nuxt 3 Frontend
+  frontend:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.dev
+    container_name: nuxt_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./app:/usr/src/app
+    working_dir: /usr/src/app
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - backend
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_db
+    ports:
+      - "3307:3306"  # Host port 3307 -> Container port 3306
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
